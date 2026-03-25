@@ -47,8 +47,14 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
 
   const bbox = useMemo(() => {
     const paths = regionCodes.map(c => prefecturePaths[c]);
-    return computeBBox(paths);
-  }, [regionCodes]);
+    const b = computeBBox(paths);
+    // 沖縄インセット用に下部に余白を追加
+    if (showOkinawa) {
+      const insetH = Math.max(40, b.h * 0.22);
+      b.h += insetH + 8;
+    }
+    return b;
+  }, [regionCodes, showOkinawa]);
 
   const getStatusClass = (code: string) => {
     const s = statuses[code];
@@ -60,8 +66,8 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
 
   // 沖縄インセットの寸法と位置（bboxの左下コーナー）
   const insetW = Math.max(50, bbox.w * 0.28);
-  const insetH = Math.max(40, bbox.h * 0.22);
-  const insetX = bbox.x + 4;
+  const insetH = Math.max(40, bbox.h * 0.18);
+  const insetX = bbox.x + bbox.w - insetW - 4;
   const insetY = bbox.y + bbox.h - insetH - 4;
   const okinawaPad = 6;
   const okinawaScale = Math.min(
