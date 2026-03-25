@@ -45,16 +45,21 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
     [region]
   );
 
-  const bbox = useMemo(() => {
+  // baseBbox（沖縄なし）を先に計算し、インセット寸法を確定してから bbox を拡張
+  const baseBbox = useMemo(() => {
     const paths = regionCodes.map(c => prefecturePaths[c]);
-    const b = computeBBox(paths);
-    // 沖縄インセット用に下部に余白を追加
-    if (showOkinawa) {
-      const insetH = Math.max(40, b.h * 0.22);
-      b.h += insetH + 8;
-    }
-    return b;
-  }, [regionCodes, showOkinawa]);
+    return computeBBox(paths);
+  }, [regionCodes]);
+
+  const insetW = Math.max(40, baseBbox.w * 0.18);
+  const insetH = Math.max(32, baseBbox.h * 0.13);
+
+  const bbox = useMemo(() => {
+    if (!showOkinawa) return baseBbox;
+    // baseBbox の下部パディング(24)を活用しつつ、足りない分だけ拡張
+    const extra = Math.max(0, insetH - 16);
+    return { ...baseBbox, h: baseBbox.h + extra };
+  }, [baseBbox, showOkinawa, insetH]);
 
   const getStatusClass = (code: string) => {
     const s = statuses[code];
@@ -64,11 +69,9 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
 
   const fontSize = Math.max(4, Math.min(10, bbox.w / regionCodes.length / 2));
 
-  // 沖縄インセットの寸法と位置（bboxの右下）
-  const insetW = Math.max(40, bbox.w * 0.18);
-  const insetH = Math.max(32, bbox.h * 0.13);
+  // 沖縄インセットの位置（baseBbox の下端 + 小さなギャップ）
   const insetX = bbox.x + bbox.w - insetW - 4;
-  const insetY = bbox.y + bbox.h - insetH - 4;
+  const insetY = baseBbox.y + baseBbox.h - 8;
   const okinawaPad = 8;
   const okinawaScale = Math.min(
     (insetW - okinawaPad * 2) / (OKINAWA_NATURAL.maxX - OKINAWA_NATURAL.minX),
