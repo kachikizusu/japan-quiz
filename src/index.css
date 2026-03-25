@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: 'Noto Sans JP', system-ui, sans-serif;
+    background: #0d1b4b;
+  }
+}
+
+/* ===== 星空背景 ===== */
+.starfield {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(236,72,153,0.15) 0%, transparent 50%),
+    #0d1b4b;
+}
+.starfield::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 15%  8%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 15%, #fff 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 40% 5%, #fde68a 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 90%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 75%, #fff 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 90% 60%, #fde68a 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 40%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 55%, #c7d2fe 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 70%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 30%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 75% 45%, #fff 0%, transparent 100%),
+    radial-gradient(2px 2px at 50% 20%, #fde68a 0%, transparent 100%);
+  pointer-events: none;
+}
+
+/* ===== 3Dボタン ===== */
+.btn-3d {
+  box-shadow: 0 6px 0 rgba(0,0,0,0.35);
+  transform: translateY(0);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+.btn-3d:active {
+  box-shadow: 0 2px 0 rgba(0,0,0,0.35);
+  transform: translateY(4px);
+}
+
+/* ===== 都道府県パス ===== */
+.prefecture-path {
+  cursor: pointer;
+  transition: fill 0.15s ease, stroke-width 0.15s ease, filter 0.15s ease;
+}
+.prefecture-path.idle {
+  fill: #4a7fbf;
+  stroke: #7ab0e8;
+  stroke-width: 0.6;
+}
+.prefecture-path.dim {
+  fill: #1e3a5f;
+  stroke: #2a4d7a;
+  stroke-width: 0.4;
+  opacity: 0.5;
+}
+/* チャレンジモード：境界線なし白地図 */
+.prefecture-path.challenge-idle {
+  fill: #5a83b8;
+  stroke: #5a83b8;
+  stroke-width: 0.6;
+}
+.prefecture-path.challenge-dim {
+  fill: #192e4a;
+  stroke: #192e4a;
+  stroke-width: 0.4;
+  opacity: 0.55;
+}
+.prefecture-path.hover {
+  fill: #facc15;
+  stroke: #f59e0b;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 8px rgba(250,204,21,0.9));
+}
+.prefecture-path.correct {
+  fill: #4ade80;
+  stroke: #16a34a;
+  stroke-width: 0.8;
+  animation: sparkle 0.6s ease forwards;
+}
+.prefecture-path.wrong {
+  animation: wrong-flash 700ms ease forwards;
+}
+
+/* ===== アニメーション ===== */
+@keyframes sparkle {
+  0%   { fill: #fff; filter: drop-shadow(0 0 12px rgba(255,255,255,1)); }
+  30%  { fill: #fef08a; filter: drop-shadow(0 0 16px rgba(253,224,71,0.9)); }
+  60%  { fill: #4ade80; filter: drop-shadow(0 0 8px rgba(74,222,128,0.7)); }
+  100% { fill: #4ade80; filter: none; }
+}
+
+@keyframes wrong-flash {
+  0%   { fill: #f87171; stroke: #ef4444; stroke-width: 2.5; filter: drop-shadow(0 0 6px rgba(239,68,68,0.8)); }
+  50%  { fill: #fca5a5; filter: none; }
+  100% { fill: #4a7fbf; stroke: #7ab0e8; stroke-width: 0.6; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%  { transform: translateX(-7px); }
+  40%  { transform: translateX(7px); }
+  60%  { transform: translateX(-4px); }
+  80%  { transform: translateX(4px); }
+}
+.shake { animation: shake 0.45s ease; }
+
+@keyframes pop-in {
+  0%   { transform: scale(0.5); opacity: 0; }
+  70%  { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.pop-in { animation: pop-in 0.35s ease forwards; }
+
+@keyframes star-spin {
+  0%   { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(180deg) scale(1.3); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes record-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(250,204,21,0.6), 0 6px 0 #92400e; }
+  50%       { box-shadow: 0 0 20px 8px rgba(250,204,21,0.4), 0 6px 0 #92400e; }
+}
+.record-pulse { animation: record-pulse 1s ease-in-out infinite; }
+
+@keyframes bounce-in {
+  0%   { transform: scale(0) rotate(-10deg); }
+  60%  { transform: scale(1.15) rotate(3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.bounce-in { animation: bounce-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
