@@ -22,7 +22,7 @@ export function getPrefecturesByRegion(
   prefectures: Prefecture[],
   region: string
 ): Prefecture[] {
-  if (region === 'すべて') return prefectures;
+  if (region === 'すべて' || region === '全国') return prefectures;
   // 選択肢は「九州・沖縄」だがデータは「九州」で統一
   const match = region === '九州・沖縄' ? '九州' : region;
   return prefectures.filter(p => p.region === match);
