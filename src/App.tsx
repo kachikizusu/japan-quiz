@@ -6,6 +6,7 @@ import DifficultySelectScreen from './screens/DifficultySelectScreen';
 import MapQuizScreen from './screens/MapQuizScreen';
 import TextQuizScreen from './screens/TextQuizScreen';
 import RegionQuizScreen from './screens/RegionQuizScreen';
+import LocationQuizScreen from './screens/LocationQuizScreen';
 import ResultScreen from './screens/ResultScreen';
 import RecordsScreen from './screens/RecordsScreen';
 import type { Screen, QuizType, QuizResult } from './types';
@@ -77,6 +78,9 @@ export default function App() {
 
       if (quizType === 'name' || quizType === 'shape') {
         return <MapQuizScreen region={region} challenge={challenge} onFinish={handleFinish} onBack={handleBack} />;
+      }
+      if (quizType === 'location') {
+        return <LocationQuizScreen region={region} onFinish={handleFinish} onBack={handleBack} />;
       }
       if (quizType === 'capital') {
         return <TextQuizScreen region={region} onFinish={handleFinish} onBack={handleBack} />;

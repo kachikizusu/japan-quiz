@@ -35,7 +35,7 @@ export default function ResultScreen({ result, challenge, onRetry, onBackToRegio
   const pct = Math.round((correctCount / totalCount) * 100);
   const perfect = correctCount === totalCount;
 
-  const targets = getTargetTimes(result.region, challenge);
+  const targets = getTargetTimes(result.region, challenge, result.quizType);
   const medal = getMedal(totalTimeMs, targets, perfect);
 
   const savedRef = useRef(false);

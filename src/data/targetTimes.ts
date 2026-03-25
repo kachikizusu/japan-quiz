@@ -22,13 +22,20 @@ const REGION_PREF_COUNT: Record<string, number> = {
 };
 
 // 1都道府県あたりの目標タイム（秒）
-// 都道府県と形クイズは「①名前選択 + ②地図タップ」の2フェーズなので余裕を持たせる
-const PER_PREF_NORMAL   = { gold: 18, silver: 30, bronze: 48 };
-const PER_PREF_CHALLENGE = { gold: 28, silver: 45, bronze: 70 };
+// name/shape: 「①名前選択 + ②地図タップ」の2フェーズ
+// location:   「地図タップのみ」の1フェーズ（早め）
+const PER_PREF: Record<string, { normal: { gold: number; silver: number; bronze: number }; challenge: { gold: number; silver: number; bronze: number } }> = {
+  name:     { normal: { gold: 18, silver: 30, bronze: 48 }, challenge: { gold: 28, silver: 45, bronze: 70 } },
+  shape:    { normal: { gold: 18, silver: 30, bronze: 48 }, challenge: { gold: 28, silver: 45, bronze: 70 } },
+  location: { normal: { gold: 10, silver: 17, bronze: 27 }, challenge: { gold: 15, silver: 25, bronze: 40 } },
+  capital:  { normal: { gold: 15, silver: 25, bronze: 40 }, challenge: { gold: 15, silver: 25, bronze: 40 } },
+  region:   { normal: { gold: 12, silver: 20, bronze: 32 }, challenge: { gold: 12, silver: 20, bronze: 32 } },
+};
 
-export function getTargetTimes(region: string, challenge: boolean): TargetTimes {
+export function getTargetTimes(region: string, challenge: boolean, quizType = 'name'): TargetTimes {
   const n = REGION_PREF_COUNT[region] ?? 7;
-  const per = challenge ? PER_PREF_CHALLENGE : PER_PREF_NORMAL;
+  const perPref = PER_PREF[quizType] ?? PER_PREF.name;
+  const per = challenge ? perPref.challenge : perPref.normal;
   const MIN_MS = 8000; // 最低8秒（1問でも意味のあるターゲット）
   return {
     gold:   Math.max(MIN_MS, n * per.gold   * 1000),

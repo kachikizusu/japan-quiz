@@ -8,7 +8,7 @@ export interface Prefecture {
   color: string;
 }
 
-export type QuizType = 'name' | 'capital' | 'shape' | 'mark' | 'region';
+export type QuizType = 'name' | 'capital' | 'shape' | 'mark' | 'region' | 'location';
 
 export type Screen =
   | { name: 'title' }

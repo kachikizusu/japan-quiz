@@ -30,7 +30,7 @@ interface SessionState {
 
 export default function MapQuizScreen({ region, challenge, onFinish, onBack }: Props) {
   const regionPrefs = getPrefecturesByRegion(prefectures, region);
-  const targets = getTargetTimes(region, challenge);
+  const targets = getTargetTimes(region, challenge, 'name');
 
   const [session, setSession] = useState<SessionState>(() => ({
     questions: shuffleArray(regionPrefs),
