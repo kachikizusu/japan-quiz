@@ -64,18 +64,18 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
 
   const fontSize = Math.max(4, Math.min(10, bbox.w / regionCodes.length / 2));
 
-  // 沖縄インセットの寸法と位置（bboxの左下コーナー）
-  const insetW = Math.max(50, bbox.w * 0.28);
-  const insetH = Math.max(40, bbox.h * 0.18);
+  // 沖縄インセットの寸法と位置（bboxの右下）
+  const insetW = Math.max(60, bbox.w * 0.32);
+  const insetH = Math.max(50, bbox.h * 0.22);
   const insetX = bbox.x + bbox.w - insetW - 4;
   const insetY = bbox.y + bbox.h - insetH - 4;
-  const okinawaPad = 6;
+  const okinawaPad = 8;
   const okinawaScale = Math.min(
     (insetW - okinawaPad * 2) / (OKINAWA_NATURAL.maxX - OKINAWA_NATURAL.minX),
-    (insetH - okinawaPad * 2 - 8) / (OKINAWA_NATURAL.maxY - OKINAWA_NATURAL.minY)
+    (insetH - okinawaPad * 2) / (OKINAWA_NATURAL.maxY - OKINAWA_NATURAL.minY)
   );
   const okinawaTx = insetX + okinawaPad - OKINAWA_NATURAL.minX * okinawaScale;
-  const okinawaTy = insetY + okinawaPad + 8 - OKINAWA_NATURAL.minY * okinawaScale;
+  const okinawaTy = insetY + okinawaPad - OKINAWA_NATURAL.minY * okinawaScale;
   // 沖縄パス中心（star/? 表示用）
   const okinawaCx = (OKINAWA_NATURAL.minX + OKINAWA_NATURAL.maxX) / 2;
   const okinawaCy = (OKINAWA_NATURAL.minY + OKINAWA_NATURAL.maxY) / 2;
@@ -143,12 +143,6 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
                 x={insetX} y={insetY} width={insetW} height={insetH}
                 fill="#0e2a4d" stroke="#1e4a7a" strokeWidth="1" rx="3"
               />
-              <text
-                x={insetX + 4} y={insetY + 7}
-                fontSize={Math.max(4, insetW * 0.1)} fill="#3b6a9e"
-                fontFamily="sans-serif"
-                style={{ pointerEvents: 'none' }}
-              >沖縄</text>
               {/* 沖縄パス（タップ可能） */}
               <g
                 transform={`translate(${okinawaTx}, ${okinawaTy}) scale(${okinawaScale})`}
