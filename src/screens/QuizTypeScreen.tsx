@@ -13,7 +13,7 @@ const QUIZ_TYPES: {
   { type: 'name',     label: '都道府県と形', emoji: '🔷', desc: '形のシルエットを地図にはめよう',       available: true,  gradient: 'from-blue-400 to-indigo-500',    shadow: 'shadow-indigo-800' },
   { type: 'capital',  label: '県庁所在地',   emoji: '🏛️', desc: '県庁所在地をひらがな・漢字で入力',     available: true,  gradient: 'from-violet-400 to-purple-600',  shadow: 'shadow-purple-900' },
   { type: 'region',   label: '地方分類',     emoji: '🗺️', desc: '47都道府県の地方をボタンで選ぼう',     available: true,  gradient: 'from-cyan-400 to-teal-500',      shadow: 'shadow-teal-900' },
-  { type: 'mark',     label: '県章クイズ',   emoji: '🏅', desc: '県章のピースをはめよう',               available: false, gradient: 'from-gray-500 to-gray-600',      shadow: 'shadow-gray-900' },
+  { type: 'mark',     label: '県章クイズ',   emoji: '🏅', desc: '県章を見て都道府県を当てよう',          available: true,  gradient: 'from-rose-400 to-pink-600',      shadow: 'shadow-pink-900' },
 ];
 
 interface Props {

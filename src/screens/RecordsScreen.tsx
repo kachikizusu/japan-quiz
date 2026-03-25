@@ -19,6 +19,7 @@ const QUIZ_GRADIENTS: Record<string, string> = {
   location: 'from-emerald-500 to-green-700',
   capital:  'from-violet-500 to-purple-700',
   region:   'from-cyan-500 to-teal-700',
+  mark:     'from-rose-500 to-pink-700',
 };
 
 const REGIONS_WITH_ALL = [
@@ -43,7 +44,7 @@ function formatDate(iso: string): string {
 
 export default function RecordsScreen({ onBack }: Props) {
   const allBests = loadAllPersonalBests();
-  const quizTypes: QuizType[] = ['location', 'name', 'capital', 'region'];
+  const quizTypes: QuizType[] = ['location', 'name', 'mark', 'capital', 'region'];
   const hasRecords = Object.keys(allBests).length > 0;
 
   return (
