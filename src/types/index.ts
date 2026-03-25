@@ -26,6 +26,8 @@ export interface PersonalBest {
   bestScore: number;
   /** Total questions in this quiz */
   totalCount: number;
+  /** Completion time (ms) of the run where bestScore was achieved */
+  bestTimeMs?: number;
   /** ISO date string of when the record was set */
   date: string;
 }

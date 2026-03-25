@@ -51,6 +51,7 @@ export function savePersonalBest(result: QuizResult): {
     return { isNewPerfect: false, isNewScore: false, prev };
   }
 
+  const isHigherScore = result.correctCount >= (prev?.bestScore ?? -1);
   const next: PersonalBest = {
     perfectTimeMs: isPerfect
       ? isNewPerfect
@@ -59,6 +60,7 @@ export function savePersonalBest(result: QuizResult): {
       : (prev?.perfectTimeMs ?? null),
     bestScore: Math.max(result.correctCount, prev?.bestScore ?? 0),
     totalCount: result.totalCount,
+    bestTimeMs: isHigherScore ? result.totalTimeMs : (prev?.bestTimeMs ?? result.totalTimeMs),
     date: new Date().toISOString(),
   };
 
