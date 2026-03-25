@@ -52,7 +52,8 @@ export default function JapanMap({ statuses, solvedCodes, isDragging, highlightR
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center overflow-hidden min-h-0" style={{ background: '#071028' }}>
+    <div className="flex-1 flex items-center justify-center overflow-hidden min-h-0"
+      style={{ background: '#071028', touchAction: 'none' }}>
       <svg
         id="japan-map-svg"
         viewBox="0 0 680 760"

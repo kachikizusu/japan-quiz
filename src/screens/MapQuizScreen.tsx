@@ -153,6 +153,7 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
   const handleDragStart = useCallback((e: React.PointerEvent) => {
     const current = sessionRef.current.questions[sessionRef.current.currentIndex];
     if (!current) return;
+    e.preventDefault();
     dragRef.current = { code: current.code, startX: e.clientX, startY: e.clientY, moved: false };
     e.currentTarget.setPointerCapture(e.pointerId);
   }, []);
@@ -169,6 +170,7 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
       if (!dragRef.current.code) return;
+      e.preventDefault(); // スクロール抑制（モバイル必須）
       const dx = e.clientX - dragRef.current.startX;
       const dy = e.clientY - dragRef.current.startY;
       if (!dragRef.current.moved && Math.hypot(dx, dy) < 6) return;
@@ -229,11 +231,12 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
       }
     };
 
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
+    // window → document、passive:false でモバイルのスクロール横取りを防ぐ
+    document.addEventListener('pointermove', onMove, { passive: false });
+    document.addEventListener('pointerup', onUp);
     return () => {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
     };
   }, [getPrefCodeAtPoint, advanceQuestion, playCorrect, playWrong]);
 
@@ -320,7 +323,7 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
 
       {/* ════════ フェーズ2：地図配置 ════════ */}
       {phase === 'place' && (
-        <>
+        <> {/* touch-action:none はドラッグ中のスクロール防止のため各要素に設定済み */}
           {/* ドラッグピース */}
           <div className="px-4 py-3 border-b border-blue-900 shrink-0 text-center" style={{ background: '#0a1638' }}>
             <p className="text-xs text-blue-400 font-bold mb-2">地図の正しい場所にドラッグしよう！</p>
