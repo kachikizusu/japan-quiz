@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import JapanMap from '../components/JapanMap';
+import RegionalMap from '../components/RegionalMap';
 import TimerBar from '../components/TimerBar';
 import PrefectureShapePiece from '../components/PrefectureShapePiece';
 import { useTimer } from '../hooks/useTimer';
@@ -7,6 +7,7 @@ import { useElapsedTime, formatElapsed } from '../hooks/useElapsedTime';
 import { useSound } from '../hooks/useSound';
 import { prefectures } from '../data/prefectures';
 import { shuffleArray, getPrefecturesByRegion, generateChoices } from '../utils/quizLogic';
+import { getTargetTimes, formatTarget } from '../data/targetTimes';
 import type { Prefecture, PrefectureStatus, QuizResult } from '../types';
 
 const TIMER_SECONDS = 20;
@@ -29,6 +30,7 @@ interface SessionState {
 
 export default function MapQuizScreen({ region, challenge, onFinish, onBack }: Props) {
   const regionPrefs = getPrefecturesByRegion(prefectures, region);
+  const targets = getTargetTimes(region, challenge);
 
   const [session, setSession] = useState<SessionState>(() => ({
     questions: shuffleArray(regionPrefs),
@@ -44,19 +46,12 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
   );
   const [nameFeedback, setNameFeedback] = useState<{ code: string; correct: boolean } | null>(null);
 
-  // ── 地図配置フェーズの状態 ────────────────────
+  // ── 地図タップフェーズの状態 ──────────────────
   const [statuses, setStatuses] = useState<Record<string, PrefectureStatus>>({});
   const [solvedCodes, setSolvedCodes] = useState<Set<string>>(new Set());
-  const [isDragging, setIsDragging] = useState(false);
-  const [ghost, setGhost] = useState<{ x: number; y: number; visible: boolean }>({
-    x: 0, y: 0, visible: false,
-  });
   const [placeFeedback, setPlaceFeedback] = useState<'correct' | 'wrong' | null>(null);
 
   // ── Refs ──────────────────────────────────────
-  const dragRef = useRef<{ code: string | null; startX: number; startY: number; moved: boolean }>(
-    { code: null, startX: 0, startY: 0, moved: false }
-  );
   const solvedRef    = useRef(solvedCodes);   solvedRef.current    = solvedCodes;
   const sessionRef   = useRef(session);       sessionRef.current   = session;
   const phaseRef     = useRef(phase);         phaseRef.current     = phase;
@@ -99,7 +94,6 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
     if (phaseRef.current === 'name') {
       if (nameFbRef.current) return;
       playWrong();
-      // 時間切れ → 正解をハイライト表示してから再チャレンジ
       const correct = sessionRef.current.questions[sessionRef.current.currentIndex];
       setNameFeedback({ code: correct.code, correct: false });
       setTimeout(() => {
@@ -149,96 +143,32 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
     }
   }, [playCorrect, playWrong]);
 
-  // ── フェーズ2：ドラッグ開始 ───────────────────
-  const handleDragStart = useCallback((e: React.PointerEvent) => {
+  // ── フェーズ2：地図タップ ─────────────────────
+  const handleTap = useCallback((tappedCode: string) => {
+    if (placeFbRef.current) return;
     const current = sessionRef.current.questions[sessionRef.current.currentIndex];
     if (!current) return;
-    e.preventDefault();
-    dragRef.current = { code: current.code, startX: e.clientX, startY: e.clientY, moved: false };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }, []);
 
-  const getPrefCodeAtPoint = useCallback((x: number, y: number): string | null => {
-    for (const el of document.elementsFromPoint(x, y)) {
-      const code = (el as HTMLElement).dataset?.code;
-      if (code) return code;
+    if (tappedCode === current.code) {
+      playCorrect();
+      timerStopRef.current();
+      setSolvedCodes(prev => new Set([...prev, current.code]));
+      setStatuses(prev => ({ ...prev, [current.code]: 'correct' }));
+      setPlaceFeedback('correct');
+      setTimeout(() => advanceQuestion(true), 900);
+    } else {
+      playWrong();
+      setStatuses(prev => ({ ...prev, [tappedCode]: 'wrong' }));
+      setPlaceFeedback('wrong');
+      setTimeout(() => {
+        setStatuses(prev =>
+          prev[tappedCode] === 'wrong' ? { ...prev, [tappedCode]: 'idle' } : prev
+        );
+        setPlaceFeedback(null);
+        timerResetRef.current();
+      }, 1000);
     }
-    return null;
-  }, []);
-
-  // ── グローバルポインターイベント ─────────────
-  useEffect(() => {
-    const onMove = (e: PointerEvent) => {
-      if (!dragRef.current.code) return;
-      e.preventDefault(); // スクロール抑制（モバイル必須）
-      const dx = e.clientX - dragRef.current.startX;
-      const dy = e.clientY - dragRef.current.startY;
-      if (!dragRef.current.moved && Math.hypot(dx, dy) < 6) return;
-      dragRef.current.moved = true;
-      setIsDragging(true);
-      setGhost({ x: e.clientX, y: e.clientY, visible: true });
-
-      const targetCode = getPrefCodeAtPoint(e.clientX, e.clientY);
-      setStatuses(prev => {
-        const next = { ...prev };
-        for (const k of Object.keys(next)) {
-          if (next[k] === 'hover') next[k] = 'idle';
-        }
-        if (targetCode && !solvedRef.current.has(targetCode)) next[targetCode] = 'hover';
-        return next;
-      });
-    };
-
-    const onUp = (e: PointerEvent) => {
-      const code  = dragRef.current.code;
-      const moved = dragRef.current.moved;
-      dragRef.current = { code: null, startX: 0, startY: 0, moved: false };
-      setIsDragging(false);
-      setGhost(g => ({ ...g, visible: false }));
-
-      setStatuses(prev => {
-        const next = { ...prev };
-        for (const k of Object.keys(next)) {
-          if (next[k] === 'hover') next[k] = 'idle';
-        }
-        return next;
-      });
-
-      if (!code || !moved) return;
-      if (placeFbRef.current) return;
-
-      const targetCode = getPrefCodeAtPoint(e.clientX, e.clientY);
-      if (!targetCode) return;
-
-      if (targetCode === code) {
-        playCorrect();
-        timerStopRef.current();
-        setSolvedCodes(prev => new Set([...prev, code]));
-        setStatuses(prev => ({ ...prev, [code]: 'correct' }));
-        setPlaceFeedback('correct');
-        setTimeout(() => advanceQuestion(true), 900);
-      } else {
-        playWrong();
-        setStatuses(prev => ({ ...prev, [targetCode]: 'wrong' }));
-        setPlaceFeedback('wrong');
-        setTimeout(() => {
-          setStatuses(prev =>
-            prev[targetCode] === 'wrong' ? { ...prev, [targetCode]: 'idle' } : prev
-          );
-          setPlaceFeedback(null);
-          timerResetRef.current();
-        }, 1000);
-      }
-    };
-
-    // window → document、passive:false でモバイルのスクロール横取りを防ぐ
-    document.addEventListener('pointermove', onMove, { passive: false });
-    document.addEventListener('pointerup', onUp);
-    return () => {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-    };
-  }, [getPrefCodeAtPoint, advanceQuestion, playCorrect, playWrong]);
+  }, [playCorrect, playWrong, advanceQuestion]);
 
   // ─────────────────────────────────────────────
   const currentPref = session.questions[session.currentIndex];
@@ -278,6 +208,14 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
           <div className="text-xs font-mono text-blue-400">⏱ {formatElapsed(elapsed)}</div>
         </div>
       </header>
+
+      {/* 目標タイムバッジ */}
+      <div className="flex justify-center gap-2 px-3 py-1.5 border-b border-blue-900 shrink-0"
+        style={{ background: '#0a1638' }}>
+        <span className="text-xs text-yellow-400 font-bold">🥇 {formatTarget(targets.gold)}</span>
+        <span className="text-xs text-gray-300 font-bold">🥈 {formatTarget(targets.silver)}</span>
+        <span className="text-xs text-orange-400 font-bold">🥉 {formatTarget(targets.bronze)}</span>
+      </div>
 
       {/* タイマーバー */}
       <TimerBar remaining={remaining} total={TIMER_SECONDS} />
@@ -321,31 +259,26 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
         </div>
       )}
 
-      {/* ════════ フェーズ2：地図配置 ════════ */}
+      {/* ════════ フェーズ2：地図タップ ════════ */}
       {phase === 'place' && (
-        <> {/* touch-action:none はドラッグ中のスクロール防止のため各要素に設定済み */}
-          {/* ドラッグピース */}
-          <div className="px-4 py-3 border-b border-blue-900 shrink-0 text-center" style={{ background: '#0a1638' }}>
-            <p className="text-xs text-blue-400 font-bold mb-2">地図の正しい場所にドラッグしよう！</p>
+        <>
+          {/* 配置対象の表示 */}
+          <div className="px-4 py-2.5 border-b border-blue-900 shrink-0 text-center" style={{ background: '#0a1638' }}>
+            <p className="text-xs text-blue-400 font-bold mb-2">地図の正しい場所をタップしよう！</p>
             <div
-              className={`
-                inline-flex flex-col items-center gap-1
-                px-5 py-2 rounded-2xl border-2 border-yellow-400
-                cursor-grab active:cursor-grabbing select-none touch-none
-                ${placeFeedback === 'wrong' ? 'shake' : ''}
-              `}
+              className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl border-2 border-yellow-400"
               style={{
                 background: 'linear-gradient(to bottom, #1e40af, #1e3a8a)',
-                boxShadow: '0 0 20px rgba(250,204,21,0.4), 0 4px 0 #92400e',
-                touchAction: 'none',
+                boxShadow: '0 0 20px rgba(250,204,21,0.4)',
               }}
-              onPointerDown={handleDragStart}
             >
-              <div className="w-16 h-16">
+              <div className="w-12 h-12">
                 <PrefectureShapePiece code={currentPref.code} region={currentPref.region} />
               </div>
-              <span className="font-black text-lg leading-tight text-white">{currentPref.name}</span>
-              <span className="text-xs text-blue-300">{currentPref.nameKana}</span>
+              <div className="text-left">
+                <span className="font-black text-lg text-white">{currentPref.name}</span>
+                <span className="block text-xs text-blue-300">{currentPref.nameKana}</span>
+              </div>
             </div>
           </div>
 
@@ -361,32 +294,15 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
             </div>
           )}
 
-          {/* 日本地図 */}
-          <JapanMap
+          {/* 地域拡大マップ（タップ操作） */}
+          <RegionalMap
+            region={region}
             statuses={statuses}
             solvedCodes={solvedCodes}
-            isDragging={isDragging}
-            highlightRegion={region}
+            onTap={handleTap}
+            disabled={placeFeedback !== null}
             challengeMode={challenge}
           />
-
-          {/* ドラッグゴースト */}
-          {ghost.visible && (
-            <div
-              className="fixed pointer-events-none z-50 flex flex-col items-center gap-1 px-3 py-2 rounded-xl border-2 border-yellow-400"
-              style={{
-                left: ghost.x, top: ghost.y, transform: 'translate(-50%, -120%)',
-                background: 'linear-gradient(to bottom, #1e40af, #1e3a8a)',
-                boxShadow: '0 0 20px rgba(250,204,21,0.6)',
-                opacity: 0.92,
-              }}
-            >
-              <div className="w-12 h-12">
-                <PrefectureShapePiece code={currentPref.code} region={currentPref.region} ghost />
-              </div>
-              <span className="font-black text-xs text-white">{currentPref.name}</span>
-            </div>
-          )}
         </>
       )}
     </div>

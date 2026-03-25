@@ -1,0 +1,54 @@
+// 地方ごとの目標タイム（レベル別）
+// 1都道府県あたりの目標タイム（秒）× 都道府県数 で計算
+
+export interface TargetTimes {
+  gold: number;   // ms
+  silver: number; // ms
+  bronze: number; // ms
+}
+
+export type Medal = 'gold' | 'silver' | 'bronze' | null;
+
+// 地方ごとの都道府県数
+const REGION_PREF_COUNT: Record<string, number> = {
+  '北海道':    1,
+  '東北':      6,
+  '関東':      7,
+  '中部':      9,
+  '近畿':      7,
+  '中国':      5,
+  '四国':      4,
+  '九州・沖縄': 8,
+};
+
+// 1都道府県あたりの目標タイム（秒）
+// 都道府県と形クイズは「①名前選択 + ②地図タップ」の2フェーズなので余裕を持たせる
+const PER_PREF_NORMAL   = { gold: 18, silver: 30, bronze: 48 };
+const PER_PREF_CHALLENGE = { gold: 28, silver: 45, bronze: 70 };
+
+export function getTargetTimes(region: string, challenge: boolean): TargetTimes {
+  const n = REGION_PREF_COUNT[region] ?? 7;
+  const per = challenge ? PER_PREF_CHALLENGE : PER_PREF_NORMAL;
+  const MIN_MS = 8000; // 最低8秒（1問でも意味のあるターゲット）
+  return {
+    gold:   Math.max(MIN_MS, n * per.gold   * 1000),
+    silver: Math.max(MIN_MS, n * per.silver * 1000),
+    bronze: Math.max(MIN_MS, n * per.bronze * 1000),
+  };
+}
+
+export function getMedal(timeMs: number, targets: TargetTimes, perfect: boolean): Medal {
+  if (!perfect) return null;
+  if (timeMs <= targets.gold)   return 'gold';
+  if (timeMs <= targets.silver) return 'silver';
+  if (timeMs <= targets.bronze) return 'bronze';
+  return null;
+}
+
+export function formatTarget(ms: number): string {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  if (m > 0) return `${m}分${sec}秒`;
+  return `${s}秒`;
+}

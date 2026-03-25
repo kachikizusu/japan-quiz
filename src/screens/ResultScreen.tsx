@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { QuizResult } from '../types';
 import { savePersonalBest, loadPersonalBest } from '../utils/personalBest';
+import { getTargetTimes, getMedal, formatTarget } from '../data/targetTimes';
+import type { Medal } from '../data/targetTimes';
 
 interface Props {
   result: QuizResult;
@@ -22,10 +24,19 @@ function formatTimeMs(ms: number): string {
   return `${(ms / 1000).toFixed(1)}秒`;
 }
 
+const MEDAL_CONFIG: Record<NonNullable<Medal>, { emoji: string; label: string; color: string; bg: string; border: string }> = {
+  gold:   { emoji: '🥇', label: 'ゴールド', color: 'text-yellow-300', bg: 'from-yellow-700 to-yellow-900', border: 'border-yellow-400' },
+  silver: { emoji: '🥈', label: 'シルバー', color: 'text-gray-200',   bg: 'from-gray-600 to-gray-800',   border: 'border-gray-400' },
+  bronze: { emoji: '🥉', label: 'ブロンズ', color: 'text-orange-300', bg: 'from-orange-700 to-orange-900', border: 'border-orange-400' },
+};
+
 export default function ResultScreen({ result, challenge, onRetry, onBackToRegion, onRecords }: Props) {
   const { correctCount, totalCount, totalTimeMs } = result;
   const pct = Math.round((correctCount / totalCount) * 100);
   const perfect = correctCount === totalCount;
+
+  const targets = getTargetTimes(result.region, challenge);
+  const medal = getMedal(totalTimeMs, targets, perfect);
 
   const savedRef = useRef(false);
   const [isNewPerfect, setIsNewPerfect] = useState(false);
@@ -75,6 +86,33 @@ export default function ResultScreen({ result, challenge, onRetry, onBackToRegio
             style={{ background: 'linear-gradient(to bottom, #14532d, #166534)' }}>
             <div className="text-xl font-black text-green-300">✨ スコア新記録！</div>
             <div className="text-sm font-bold text-green-400 mt-1">{correctCount} 問正解</div>
+          </div>
+        )}
+
+        {/* メダル */}
+        {medal && (() => {
+          const m = MEDAL_CONFIG[medal];
+          return (
+            <div className={`w-full max-w-xs rounded-2xl px-4 py-3 text-center border-2 ${m.border} bounce-in bg-gradient-to-b ${m.bg}`}>
+              <div className={`text-4xl mb-1`}>{m.emoji}</div>
+              <div className={`text-xl font-black ${m.color}`}>{m.label}メダル獲得！</div>
+              <div className={`text-xs font-bold ${m.color} opacity-80 mt-1`}>
+                全問正解 {formatTimeMs(totalTimeMs)} でクリア！
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* 目標タイム（全問正解でない場合も表示） */}
+        {!medal && (
+          <div className="w-full max-w-xs rounded-xl px-3 py-2 border border-blue-700 text-xs"
+            style={{ background: '#0e2a4d' }}>
+            <div className="text-blue-400 font-bold mb-1 text-center">🎯 目標タイム（全問正解で獲得）</div>
+            <div className="flex justify-around">
+              <span className="text-yellow-400 font-bold">🥇 {formatTarget(targets.gold)}</span>
+              <span className="text-gray-300 font-bold">🥈 {formatTarget(targets.silver)}</span>
+              <span className="text-orange-400 font-bold">🥉 {formatTarget(targets.bronze)}</span>
+            </div>
           </div>
         )}
 
