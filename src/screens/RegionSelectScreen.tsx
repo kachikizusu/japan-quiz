@@ -21,7 +21,7 @@ const QUIZ_TYPE_LABEL: Record<QuizType, string> = {
 };
 
 // 全国バージョンを提供するクイズ種類
-const SUPPORTS_ALL_JAPAN: QuizType[] = ['name', 'location'];
+const SUPPORTS_ALL_JAPAN: QuizType[] = ['name', 'location', 'mark'];
 
 interface Props {
   quizType: QuizType;

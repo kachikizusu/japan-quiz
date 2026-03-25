@@ -28,6 +28,14 @@ export default function MarkQuizScreen({ region, onFinish, onBack }: Props) {
   const regionPrefs = getPrefecturesByRegion(prefectures, region);
   const targets = getTargetTimes(region, false, 'mark');
 
+  // 全国モード時は正解と同じ地方内を選択肢プールにする
+  const getWrongPool = useCallback((pref: Prefecture) => {
+    if (region === '全国') {
+      return getPrefecturesByRegion(prefectures, pref.region === '九州' ? '九州・沖縄' : pref.region);
+    }
+    return regionPrefs;
+  }, [region, regionPrefs]);
+
   const [session, setSession] = useState<SessionState>(() => ({
     questions: shuffleArray(regionPrefs),
     currentIndex: 0,
@@ -36,7 +44,7 @@ export default function MarkQuizScreen({ region, onFinish, onBack }: Props) {
   }));
 
   const [choices, setChoices] = useState<Prefecture[]>(() =>
-    generateChoices(session.questions[0], prefectures, regionPrefs)
+    generateChoices(session.questions[0], prefectures, getWrongPool(session.questions[0]))
   );
   const [feedback, setFeedback] = useState<{ code: string; correct: boolean } | null>(null);
   const [imgError, setImgError] = useState(false);
@@ -67,7 +75,7 @@ export default function MarkQuizScreen({ region, onFinish, onBack }: Props) {
 
     const nextPref = s.questions[nextIndex];
     setSession(prev => ({ ...prev, currentIndex: nextIndex, correctCount: newCorrect }));
-    setChoices(generateChoices(nextPref, prefectures, regionPrefs));
+    setChoices(generateChoices(nextPref, prefectures, getWrongPool(nextPref)));
     setFeedback(null);
     setImgError(false);
     timerResetRef.current();
