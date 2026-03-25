@@ -9,12 +9,24 @@ export function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-/** 正解1つ＋ランダム3つの4択選択肢を生成 */
+/** 正解1つ＋ランダム3つの4択選択肢を生成
+ *  wrongPool を指定するとその中から誤答候補を選ぶ（不足時は allPrefs で補完）
+ */
 export function generateChoices(
   correct: Prefecture,
-  allPrefs: Prefecture[]
+  allPrefs: Prefecture[],
+  wrongPool?: Prefecture[]
 ): Prefecture[] {
-  const others = shuffleArray(allPrefs.filter(p => p.code !== correct.code)).slice(0, 3);
+  const pool = wrongPool ?? allPrefs;
+  const poolWithout = pool.filter(p => p.code !== correct.code);
+  let others = shuffleArray(poolWithout).slice(0, 3);
+  // 不足分を全国から補完
+  if (others.length < 3) {
+    const fallback = allPrefs.filter(
+      p => p.code !== correct.code && !others.some(o => o.code === p.code)
+    );
+    others = [...others, ...shuffleArray(fallback)].slice(0, 3);
+  }
   return shuffleArray([correct, ...others]);
 }
 

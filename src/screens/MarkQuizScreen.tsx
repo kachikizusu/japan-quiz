@@ -36,7 +36,7 @@ export default function MarkQuizScreen({ region, onFinish, onBack }: Props) {
   }));
 
   const [choices, setChoices] = useState<Prefecture[]>(() =>
-    generateChoices(session.questions[0], prefectures)
+    generateChoices(session.questions[0], prefectures, regionPrefs)
   );
   const [feedback, setFeedback] = useState<{ code: string; correct: boolean } | null>(null);
   const [imgError, setImgError] = useState(false);
@@ -67,7 +67,7 @@ export default function MarkQuizScreen({ region, onFinish, onBack }: Props) {
 
     const nextPref = s.questions[nextIndex];
     setSession(prev => ({ ...prev, currentIndex: nextIndex, correctCount: newCorrect }));
-    setChoices(generateChoices(nextPref, prefectures));
+    setChoices(generateChoices(nextPref, prefectures, regionPrefs));
     setFeedback(null);
     setImgError(false);
     timerResetRef.current();
