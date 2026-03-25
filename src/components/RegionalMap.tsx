@@ -30,7 +30,11 @@ function computeBBox(paths: string[], pad = 24) {
 export default function RegionalMap({ region, statuses, solvedCodes, onTap, disabled, challengeMode }: Props) {
   const regionCodes = useMemo(() =>
     Object.entries(prefectureByCode)
-      .filter(([, p]) => p.region === region || (region === '九州・沖縄' && p.region === '九州'))
+      .filter(([, p]) =>
+        region === '全国' ||
+        p.region === region ||
+        (region === '九州・沖縄' && p.region === '九州')
+      )
       .map(([code]) => code)
       .filter(code => code in prefecturePaths),
     [region]

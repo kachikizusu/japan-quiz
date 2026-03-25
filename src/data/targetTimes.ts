@@ -19,6 +19,7 @@ const REGION_PREF_COUNT: Record<string, number> = {
   '中国':      5,
   '四国':      4,
   '九州・沖縄': 8,
+  '全国':       47,
 };
 
 // 1都道府県あたりの目標タイム（秒）

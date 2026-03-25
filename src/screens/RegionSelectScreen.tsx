@@ -12,12 +12,16 @@ const REGIONS = [
 ];
 
 const QUIZ_TYPE_LABEL: Record<QuizType, string> = {
-  name:    '都道府県と形',
-  capital: '県庁所在地クイズ',
-  shape:   '形クイズ',
-  mark:    '県章クイズ',
-  region:  '地方分類クイズ',
+  name:     '都道府県と形',
+  location: '位置クイズ',
+  capital:  '県庁所在地クイズ',
+  shape:    '形クイズ',
+  mark:     '県章クイズ',
+  region:   '地方分類クイズ',
 };
+
+// 全国バージョンを提供するクイズ種類
+const SUPPORTS_ALL_JAPAN: QuizType[] = ['name', 'location'];
 
 interface Props {
   quizType: QuizType;
@@ -37,23 +41,40 @@ export default function RegionSelectScreen({ quizType, onSelect, onBack }: Props
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-3">
-        {REGIONS.map(({ name, emoji, gradient, shadow, count }) => (
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+        {/* 全国バージョン */}
+        {SUPPORTS_ALL_JAPAN.includes(quizType) && (
           <button
-            key={name}
-            onClick={() => onSelect(name)}
-            className={`
-              btn-3d flex flex-col items-center justify-center gap-1.5
-              p-4 rounded-2xl border-2 border-white/25
-              bg-gradient-to-br ${gradient} ${shadow}
-              hover:brightness-110
-            `}
+            onClick={() => onSelect('全国')}
+            className="btn-3d flex items-center justify-center gap-3 p-4 rounded-2xl border-2 border-white/25 bg-gradient-to-r from-yellow-400 to-orange-500 shadow-orange-900 hover:brightness-110"
           >
-            <span className="text-3xl drop-shadow-lg">{emoji}</span>
-            <span className="font-black text-white text-sm drop-shadow">{name}</span>
-            <span className="text-xs text-white/75 font-bold">{count}都道府県</span>
+            <span className="text-3xl drop-shadow-lg">🗾</span>
+            <div className="text-left">
+              <span className="font-black text-white text-lg drop-shadow block">全国</span>
+              <span className="text-xs text-white/80 font-bold">47都道府県すべて</span>
+            </div>
           </button>
-        ))}
+        )}
+
+        {/* 地方別 */}
+        <div className="grid grid-cols-2 gap-3">
+          {REGIONS.map(({ name, emoji, gradient, shadow, count }) => (
+            <button
+              key={name}
+              onClick={() => onSelect(name)}
+              className={`
+                btn-3d flex flex-col items-center justify-center gap-1.5
+                p-4 rounded-2xl border-2 border-white/25
+                bg-gradient-to-br ${gradient} ${shadow}
+                hover:brightness-110
+              `}
+            >
+              <span className="text-3xl drop-shadow-lg">{emoji}</span>
+              <span className="font-black text-white text-sm drop-shadow">{name}</span>
+              <span className="text-xs text-white/75 font-bold">{count}都道府県</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
