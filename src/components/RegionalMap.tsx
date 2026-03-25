@@ -65,8 +65,8 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
   const fontSize = Math.max(4, Math.min(10, bbox.w / regionCodes.length / 2));
 
   // 沖縄インセットの寸法と位置（bboxの右下）
-  const insetW = Math.max(60, bbox.w * 0.32);
-  const insetH = Math.max(50, bbox.h * 0.22);
+  const insetW = Math.max(40, bbox.w * 0.18);
+  const insetH = Math.max(32, bbox.h * 0.13);
   const insetX = bbox.x + bbox.w - insetW - 4;
   const insetY = bbox.y + bbox.h - insetH - 4;
   const okinawaPad = 8;
