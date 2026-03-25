@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#0d1b4b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- 内側グロー -->
+  <ellipse cx="256" cy="200" rx="200" ry="160" fill="#3b82f6" opacity="0.12"/>
+
+  <!-- 日本地図を模した形（シンプルな島々） -->
+  <!-- 本州 (simplified) -->
+  <ellipse cx="270" cy="220" rx="140" ry="48" fill="#4a7fbf" opacity="0.9" transform="rotate(-20 270 220)"/>
+  <!-- 北海道 -->
+  <ellipse cx="310" cy="155" rx="52" ry="36" fill="#4a7fbf" opacity="0.9" transform="rotate(-10 310 155)"/>
+  <!-- 九州 -->
+  <ellipse cx="168" cy="285" rx="38" ry="30" fill="#4a7fbf" opacity="0.9" transform="rotate(10 168 285)"/>
+  <!-- 四国 -->
+  <ellipse cx="230" cy="278" rx="32" ry="20" fill="#4a7fbf" opacity="0.85" transform="rotate(-5 230 278)"/>
+
+  <!-- 海の輝き -->
+  <ellipse cx="256" cy="210" rx="110" ry="38" fill="none" stroke="#60a5fa" stroke-width="1.5" opacity="0.3" transform="rotate(-20 256 210)"/>
+
+  <!-- 星 -->
+  <text x="256" y="420" text-anchor="middle" font-size="96" font-family="sans-serif" fill="#fef08a">★</text>
+
+  <!-- タイトル -->
+  <text x="256" y="460" text-anchor="middle" font-size="52" font-family="sans-serif" font-weight="900" fill="#fef08a" letter-spacing="-1">都道府県</text>
+  <text x="256" y="500" text-anchor="middle" font-size="36" font-family="sans-serif" font-weight="700" fill="#93c5fd">クイズ</text>
+</svg>
