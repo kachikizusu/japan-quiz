@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { prefecturePaths, prefectureLabelPos } from '../data/prefecturePaths.generated';
+import { prefecturePaths, prefectureLabelPos, OKINAWA_PATH } from '../data/prefecturePaths.generated';
 import { prefectureByCode } from '../data/prefectures';
 import type { PrefectureStatus } from '../types';
 
@@ -27,7 +27,12 @@ function computeBBox(paths: string[], pad = 24) {
   return { x: minX - pad, y: minY - pad, w: maxX - minX + pad * 2, h: maxY - minY + pad * 2 };
 }
 
+// OKINAWA_PATH の自然な座標範囲
+const OKINAWA_NATURAL = { minX: 42, maxX: 56, minY: 12, maxY: 28 };
+
 export default function RegionalMap({ region, statuses, solvedCodes, onTap, disabled, challengeMode }: Props) {
+  const showOkinawa = region === '九州・沖縄' || region === '全国';
+
   const regionCodes = useMemo(() =>
     Object.entries(prefectureByCode)
       .filter(([, p]) =>
@@ -51,8 +56,23 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
     return challengeMode ? 'challenge-idle' : 'idle';
   };
 
-  // ラベルが読みやすいサイズになるようbboxに合わせてfontSizeを調整
   const fontSize = Math.max(4, Math.min(10, bbox.w / regionCodes.length / 2));
+
+  // 沖縄インセットの寸法と位置（bboxの左下コーナー）
+  const insetW = Math.max(50, bbox.w * 0.28);
+  const insetH = Math.max(40, bbox.h * 0.22);
+  const insetX = bbox.x + 4;
+  const insetY = bbox.y + bbox.h - insetH - 4;
+  const okinawaPad = 6;
+  const okinawaScale = Math.min(
+    (insetW - okinawaPad * 2) / (OKINAWA_NATURAL.maxX - OKINAWA_NATURAL.minX),
+    (insetH - okinawaPad * 2 - 8) / (OKINAWA_NATURAL.maxY - OKINAWA_NATURAL.minY)
+  );
+  const okinawaTx = insetX + okinawaPad - OKINAWA_NATURAL.minX * okinawaScale;
+  const okinawaTy = insetY + okinawaPad + 8 - OKINAWA_NATURAL.minY * okinawaScale;
+  // 沖縄パス中心（star/? 表示用）
+  const okinawaCx = (OKINAWA_NATURAL.minX + OKINAWA_NATURAL.maxX) / 2;
+  const okinawaCy = (OKINAWA_NATURAL.minY + OKINAWA_NATURAL.maxY) / 2;
 
   return (
     <div
@@ -64,6 +84,7 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
         className="w-full h-full"
         style={{ touchAction: 'none', maxWidth: '100%', maxHeight: '100%' }}
       >
+        {/* 通常の都道府県 */}
         {regionCodes.map(code => {
           const d = prefecturePaths[code];
           const statusClass = getStatusClass(code);
@@ -83,7 +104,6 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
                 data-code={code}
                 className={`prefecture-path ${statusClass}`}
               />
-              {/* 解答済みは★、それ以外はchallengeMode以外で名前を薄く表示 */}
               {pos && isSolved && (
                 <text
                   x={pos.x} y={pos.y}
@@ -103,6 +123,58 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
             </g>
           );
         })}
+
+        {/* 沖縄インセット */}
+        {showOkinawa && (() => {
+          const statusClass = getStatusClass('okinawa');
+          const isSolved = solvedCodes.has('okinawa');
+          const isWrong = statuses['okinawa'] === 'wrong';
+          const starSize = fontSize / okinawaScale;
+          return (
+            <g key="okinawa-inset">
+              {/* インセット枠 */}
+              <rect
+                x={insetX} y={insetY} width={insetW} height={insetH}
+                fill="#0e2a4d" stroke="#1e4a7a" strokeWidth="1" rx="3"
+              />
+              <text
+                x={insetX + 4} y={insetY + 7}
+                fontSize={Math.max(4, insetW * 0.1)} fill="#3b6a9e"
+                fontFamily="sans-serif"
+                style={{ pointerEvents: 'none' }}
+              >沖縄</text>
+              {/* 沖縄パス（タップ可能） */}
+              <g
+                transform={`translate(${okinawaTx}, ${okinawaTy}) scale(${okinawaScale})`}
+                onClick={() => { if (!disabled) onTap('okinawa'); }}
+                onPointerDown={e => { e.preventDefault(); if (!disabled) onTap('okinawa'); }}
+                style={{ cursor: disabled ? 'default' : 'pointer' }}
+              >
+                <path
+                  d={OKINAWA_PATH}
+                  data-code="okinawa"
+                  className={`prefecture-path ${statusClass}`}
+                />
+                {isSolved && (
+                  <text
+                    x={okinawaCx} y={okinawaCy}
+                    textAnchor="middle" dominantBaseline="middle"
+                    fontSize={starSize} fill="#fef08a" fontWeight="bold"
+                    style={{ pointerEvents: 'none', fontFamily: 'sans-serif' }}
+                  >★</text>
+                )}
+                {!isSolved && !challengeMode && !isWrong && (
+                  <text
+                    x={okinawaCx} y={okinawaCy}
+                    textAnchor="middle" dominantBaseline="middle"
+                    fontSize={starSize * 0.85} fill="rgba(255,255,255,0.25)"
+                    style={{ pointerEvents: 'none', fontFamily: 'sans-serif' }}
+                  >?</text>
+                )}
+              </g>
+            </g>
+          );
+        })()}
       </svg>
     </div>
   );
