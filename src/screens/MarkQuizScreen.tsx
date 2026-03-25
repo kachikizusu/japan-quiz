@@ -151,14 +151,13 @@ export default function MarkQuizScreen({ region, onFinish, onBack }: Props) {
         <p className="text-blue-300 font-bold text-sm">この県章はどの都道府県？</p>
 
         {/* 県章画像 */}
-        <div className="w-44 h-44 rounded-2xl border-2 border-blue-600 flex items-center justify-center p-4"
-          style={{ background: '#0e2a4d', boxShadow: '0 0 20px rgba(59,130,246,0.3), inset 0 2px 8px rgba(0,0,0,0.5)' }}>
+        <div className="w-44 h-44 rounded-2xl border-4 border-blue-600 flex items-center justify-center p-5"
+          style={{ background: '#ffffff', boxShadow: '0 0 24px rgba(59,130,246,0.5)' }}>
           {markSrc && !imgError ? (
             <img
               src={markSrc}
               alt="県章"
               className="w-full h-full object-contain"
-              style={{ filter: 'brightness(0) invert(1)' }}
               onError={() => setImgError(true)}
             />
           ) : (
