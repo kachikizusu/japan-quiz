@@ -42,6 +42,7 @@ export default function TextQuizScreen({ region, onFinish, onBack }: Props) {
   feedbackRef.current = feedback;
   const timerResetRef = useRef<() => void>(() => {});
   const timerStopRef  = useRef<() => void>(() => {});
+  const hasWrongRef = useRef(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const { playCorrect, playWrong } = useSound();
@@ -51,7 +52,9 @@ export default function TextQuizScreen({ region, onFinish, onBack }: Props) {
 
   const advanceQuestion = useCallback((wasCorrect: boolean) => {
     const s = sessionRef.current;
-    const newCorrect = s.correctCount + (wasCorrect ? 1 : 0);
+    const actuallyCorrect = wasCorrect && !hasWrongRef.current;
+    hasWrongRef.current = false;
+    const newCorrect = s.correctCount + (actuallyCorrect ? 1 : 0);
     const nextIndex  = s.currentIndex + 1;
 
     if (nextIndex >= s.questions.length) {
@@ -101,6 +104,7 @@ export default function TextQuizScreen({ region, onFinish, onBack }: Props) {
       setFeedback('correct');
       setTimeout(() => advanceQuestion(true), 1000);
     } else {
+      hasWrongRef.current = true;
       playWrong();
       setFeedback('wrong');
       setTimeout(() => {

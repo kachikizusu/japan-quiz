@@ -45,8 +45,8 @@ export default function App() {
         <RegionSelectScreen
           quizType={screen.quizType}
           onSelect={(region) => {
-            // 都道府県と形クイズのみ難易度選択を挟む
-            if (screen.quizType === 'name') {
+            // 難易度選択を挟むクイズ種別
+            if (screen.quizType === 'name' || screen.quizType === 'mark') {
               go({ name: 'difficultySelect', quizType: screen.quizType, region });
             } else {
               go({ name: 'quiz', quizType: screen.quizType, region, challenge: false });
@@ -60,6 +60,7 @@ export default function App() {
       return (
         <DifficultySelectScreen
           region={screen.region}
+          quizType={screen.quizType}
           onSelect={(challenge) =>
             go({ name: 'quiz', quizType: screen.quizType, region: screen.region, challenge })
           }
@@ -73,7 +74,7 @@ export default function App() {
       const handleBack = () =>
         quizType === 'region'
           ? go({ name: 'quizType' })
-          : quizType === 'name'
+          : quizType === 'name' || quizType === 'mark'
           ? go({ name: 'difficultySelect', quizType, region })
           : go({ name: 'regionSelect', quizType });
 
@@ -84,7 +85,7 @@ export default function App() {
         return <LocationQuizScreen region={region} onFinish={handleFinish} onBack={handleBack} />;
       }
       if (quizType === 'mark') {
-        return <MarkQuizScreen region={region} onFinish={handleFinish} onBack={handleBack} />;
+        return <MarkQuizScreen region={region} challenge={challenge} onFinish={handleFinish} onBack={handleBack} />;
       }
       if (quizType === 'capital') {
         return <TextQuizScreen region={region} onFinish={handleFinish} onBack={handleBack} />;
@@ -112,7 +113,7 @@ export default function App() {
             const { quizType } = screen.result;
             if (quizType === 'region') {
               go({ name: 'quizType' });
-            } else if (quizType === 'name') {
+            } else if (quizType === 'name' || quizType === 'mark') {
               go({ name: 'difficultySelect', quizType, region: screen.result.region });
             } else {
               go({ name: 'regionSelect', quizType });

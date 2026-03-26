@@ -59,6 +59,8 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
   const placeFbRef   = useRef(placeFeedback); placeFbRef.current   = placeFeedback;
   const timerResetRef = useRef<() => void>(() => {});
   const timerStopRef  = useRef<() => void>(() => {});
+  // この問題で1度でも間違えたか
+  const hasWrongRef = useRef(false);
 
   const { playCorrect, playWrong } = useSound();
   const elapsed = useElapsedTime(session.startTime);
@@ -66,7 +68,9 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
   // ── 問題を次に進める ─────────────────────────
   const advanceQuestion = useCallback((wasCorrect: boolean) => {
     const s = sessionRef.current;
-    const newCorrect = s.correctCount + (wasCorrect ? 1 : 0);
+    const actuallyCorrect = wasCorrect && !hasWrongRef.current;
+    hasWrongRef.current = false;
+    const newCorrect = s.correctCount + (actuallyCorrect ? 1 : 0);
     const nextIndex  = s.currentIndex + 1;
 
     if (nextIndex >= s.questions.length) {
@@ -93,6 +97,7 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
   const handleExpire = useCallback(() => {
     if (phaseRef.current === 'name') {
       if (nameFbRef.current) return;
+      hasWrongRef.current = true;
       playWrong();
       const correct = sessionRef.current.questions[sessionRef.current.currentIndex];
       setNameFeedback({ code: correct.code, correct: false });
@@ -102,6 +107,7 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
       }, 1500);
     } else {
       if (placeFbRef.current) return;
+      hasWrongRef.current = true;
       playWrong();
       setPlaceFeedback('wrong');
       setTimeout(() => {
@@ -134,6 +140,7 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
         setPhase('place');
       }, 700);
     } else {
+      hasWrongRef.current = true;
       playWrong();
       setNameFeedback({ code: chosen.code, correct: false });
       setTimeout(() => {
@@ -157,6 +164,7 @@ export default function MapQuizScreen({ region, challenge, onFinish, onBack }: P
       setPlaceFeedback('correct');
       setTimeout(() => advanceQuestion(true), 900);
     } else {
+      hasWrongRef.current = true;
       playWrong();
       setStatuses(prev => ({ ...prev, [tappedCode]: 'wrong' }));
       setPlaceFeedback('wrong');

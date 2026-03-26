@@ -43,13 +43,16 @@ export default function LocationQuizScreen({ region, onFinish, onBack }: Props) 
   const feedbackRef = useRef(feedback); feedbackRef.current = feedback;
   const timerResetRef = useRef<() => void>(() => {});
   const timerStopRef  = useRef<() => void>(() => {});
+  const hasWrongRef = useRef(false);
 
   const { playCorrect, playWrong } = useSound();
   const elapsed = useElapsedTime(session.startTime);
 
   const advanceQuestion = useCallback((wasCorrect: boolean) => {
     const s = sessionRef.current;
-    const newCorrect = s.correctCount + (wasCorrect ? 1 : 0);
+    const actuallyCorrect = wasCorrect && !hasWrongRef.current;
+    hasWrongRef.current = false;
+    const newCorrect = s.correctCount + (actuallyCorrect ? 1 : 0);
     const nextIndex  = s.currentIndex + 1;
 
     if (nextIndex >= s.questions.length) {
@@ -70,6 +73,7 @@ export default function LocationQuizScreen({ region, onFinish, onBack }: Props) 
 
   const handleExpire = useCallback(() => {
     if (feedbackRef.current) return;
+    hasWrongRef.current = true;
     playWrong();
     setFeedback('wrong');
     setTimeout(() => {
@@ -100,6 +104,7 @@ export default function LocationQuizScreen({ region, onFinish, onBack }: Props) 
       setFeedback('correct');
       setTimeout(() => advanceQuestion(true), 900);
     } else {
+      hasWrongRef.current = true;
       playWrong();
       setStatuses(prev => ({ ...prev, [tappedCode]: 'wrong' }));
       setFeedback('wrong');
@@ -183,6 +188,7 @@ export default function LocationQuizScreen({ region, onFinish, onBack }: Props) 
         solvedCodes={solvedCodes}
         onTap={handleTap}
         disabled={feedback !== null}
+        zoomable
       />
     </div>
   );

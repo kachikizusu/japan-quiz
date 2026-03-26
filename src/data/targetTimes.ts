@@ -31,7 +31,7 @@ const PER_PREF: Record<string, { normal: { gold: number; silver: number; bronze:
   location: { normal: { gold: 10, silver: 17, bronze: 27 }, challenge: { gold: 15, silver: 25, bronze: 40 } },
   capital:  { normal: { gold: 15, silver: 25, bronze: 40 }, challenge: { gold: 15, silver: 25, bronze: 40 } },
   region:   { normal: { gold: 12, silver: 20, bronze: 32 }, challenge: { gold: 12, silver: 20, bronze: 32 } },
-  mark:     { normal: { gold: 14, silver: 22, bronze: 35 }, challenge: { gold: 14, silver: 22, bronze: 35 } },
+  mark:     { normal: { gold: 14, silver: 22, bronze: 35 }, challenge: { gold: 22, silver: 35, bronze: 55 } },
 };
 
 export function getTargetTimes(region: string, challenge: boolean, quizType = 'name'): TargetTimes {

@@ -71,6 +71,17 @@ const CAPITAL_ANSWERS: Record<string, string[]> = {
   okinawa:   ['なは', '那覇'],
 };
 
+export function isCorrectPrefName(pref: { name: string; nameKana: string }, input: string): boolean {
+  const norm = kataToHira(fullToHalf(input.trim())).replace(/\s+/g, '');
+  // 漢字入力（都/道/府/県 あり・なし両対応）
+  const normStripped = norm.replace(/[都道府県]$/, '');
+  const nameStripped = pref.name.replace(/[都道府県]$/, '');
+  if (norm === pref.name || normStripped === nameStripped) return true;
+  // ひらがな入力（完全一致）
+  if (norm === pref.nameKana) return true;
+  return false;
+}
+
 export function isCorrectCapital(code: string, input: string): boolean {
   const answers = CAPITAL_ANSWERS[code];
   if (!answers) return false;

@@ -56,6 +56,7 @@ export default function RegionQuizScreen({ onFinish, onBack }: Props) {
   feedbackRef.current = feedback;
   const timerResetRef = useRef<() => void>(() => {});
   const timerStopRef  = useRef<() => void>(() => {});
+  const hasWrongRef = useRef(false);
 
   const { playCorrect, playWrong } = useSound();
   const elapsed = useElapsedTime(session.startTime);
@@ -64,7 +65,9 @@ export default function RegionQuizScreen({ onFinish, onBack }: Props) {
 
   const advanceQuestion = useCallback((wasCorrect: boolean) => {
     const s = sessionRef.current;
-    const newCorrect = s.correctCount + (wasCorrect ? 1 : 0);
+    const actuallyCorrect = wasCorrect && !hasWrongRef.current;
+    hasWrongRef.current = false;
+    const newCorrect = s.correctCount + (actuallyCorrect ? 1 : 0);
     const nextIndex  = s.currentIndex + 1;
 
     if (nextIndex >= s.questions.length) {
@@ -111,6 +114,7 @@ export default function RegionQuizScreen({ onFinish, onBack }: Props) {
       setFeedback({ selected: label, correct: true });
       setTimeout(() => advanceQuestion(true), 900);
     } else {
+      hasWrongRef.current = true;
       playWrong();
       setFeedback({ selected: label, correct: false });
       setTimeout(() => {

@@ -1,10 +1,21 @@
 interface Props {
   region: string;
+  quizType?: string;
   onSelect: (challenge: boolean) => void;
   onBack: () => void;
 }
 
-export default function DifficultySelectScreen({ region, onSelect, onBack }: Props) {
+export default function DifficultySelectScreen({ region, quizType = 'name', onSelect, onBack }: Props) {
+  const isMark = quizType === 'mark';
+  const headerLabel = isMark ? `県章クイズ・${region}` : `都道府県と形・${region}`;
+  const normalDesc = isMark
+    ? '4つの選択肢から都道府県名を選ぼう！まずはここから挑戦しよう！'
+    : '都道府県の境界線が見えるよ。まずはここから挑戦しよう！';
+  const challengeDesc = isMark
+    ? '選択肢なし！県章を見て都道府県名を自分で入力しよう。本当の実力試し！'
+    : '境界線なし！白地図に正しい場所を見つけよう。本当の実力試し！';
+  const normalIcon = isMark ? '🏅' : '🗾';
+
   return (
     <div className="flex flex-col h-full" style={{ background: '#0d1b4b' }}>
       <header
@@ -13,7 +24,7 @@ export default function DifficultySelectScreen({ region, onSelect, onBack }: Pro
       >
         <button onClick={onBack} className="text-yellow-300 text-2xl px-1 font-black hover:scale-110 transition-transform">←</button>
         <div>
-          <div className="text-xs text-blue-300 font-bold">都道府県と形・{region}</div>
+          <div className="text-xs text-blue-300 font-bold">{headerLabel}</div>
           <h2 className="text-lg font-black text-white">難易度を選ぼう！</h2>
         </div>
       </header>
@@ -29,15 +40,13 @@ export default function DifficultySelectScreen({ region, onSelect, onBack }: Pro
         >
           <div className="px-5 py-4">
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-4xl">🗾</span>
+              <span className="text-4xl">{normalIcon}</span>
               <div>
                 <div className="font-black text-xl text-white">ふつう</div>
                 <div className="text-xs text-blue-300 font-bold">NORMAL</div>
               </div>
             </div>
-            <p className="text-sm text-blue-200">
-              都道府県の境界線が見えるよ。<br />まずはここから挑戦しよう！
-            </p>
+            <p className="text-sm text-blue-200">{normalDesc}</p>
           </div>
         </button>
 
@@ -55,9 +64,7 @@ export default function DifficultySelectScreen({ region, onSelect, onBack }: Pro
                 <div className="text-xs text-yellow-600 font-bold">CHALLENGE</div>
               </div>
             </div>
-            <p className="text-sm text-yellow-200">
-              境界線なし！白地図に正しい場所を<br />見つけよう。本当の実力試し！
-            </p>
+            <p className="text-sm text-yellow-200">{challengeDesc}</p>
             <div className="mt-2 inline-block bg-yellow-400 text-yellow-900 text-xs font-black px-2 py-0.5 rounded-full">
               🏆 記録対象
             </div>
