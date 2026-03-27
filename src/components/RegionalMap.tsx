@@ -65,11 +65,16 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
 
   // ── ズーム / パン 用 ViewBox 状態 ──────────────────────
   const [vb, setVb] = useState<ViewBox>(() => ({ ...bbox }));
-  const vbRef = useRef<ViewBox>(vb); vbRef.current = vb;
+
+  // イベントハンドラ内で同期的に最新値を参照するためのref
+  // vbRef（レンダー後に更新）とは違い、setVb と同時に即座に更新する
+  const liveVbRef = useRef<ViewBox>({ ...bbox });
 
   // region が変わったら viewBox をリセット
   useEffect(() => {
-    setVb({ ...bbox });
+    const next = { ...bbox };
+    liveVbRef.current = next;
+    setVb(next);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [region]);
 
@@ -77,7 +82,11 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
   const minViewW = bbox.w * 0.15; // 最大約6.7倍ズーム
   const maxViewW = bbox.w * 1.05;
 
-  const resetZoom = useCallback(() => setVb({ ...bbox }), [bbox]);
+  const resetZoom = useCallback(() => {
+    const next = { ...bbox };
+    liveVbRef.current = next;
+    setVb(next);
+  }, [bbox]);
   const isZoomed = vb.w < bbox.w * 0.98 || Math.abs(vb.x - bbox.x) > 1 || Math.abs(vb.y - bbox.y) > 1;
 
   // ── タッチ操作（パン & ピンチズーム） ────────────────────
@@ -91,12 +100,18 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
     let startDist = 0, startCx = 0, startCy = 0;
     let isPanning = false;
 
+    // setVb と同時に liveVbRef も同期更新するヘルパー
+    const applyVb = (newVb: ViewBox) => {
+      liveVbRef.current = newVb;
+      setVb(newVb);
+    };
+
     const onTouchStart = (e: TouchEvent) => {
       isPanning = false;
       if (e.touches.length === 1) {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
-        startVb = { ...vbRef.current };
+        startVb = { ...liveVbRef.current };
       } else if (e.touches.length === 2) {
         startDist = Math.hypot(
           e.touches[1].clientX - e.touches[0].clientX,
@@ -104,7 +119,7 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
         );
         startCx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
         startCy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-        startVb = { ...vbRef.current };
+        startVb = { ...liveVbRef.current };
       }
     };
 
@@ -119,7 +134,7 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
         if (!isPanning && Math.hypot(dx, dy) < 10) return;
         isPanning = true;
         e.preventDefault();
-        setVb({
+        applyVb({
           x: startVb.x - dx * startVb.w / rect.width,
           y: startVb.y - dy * startVb.h / rect.height,
           w: startVb.w,
@@ -151,7 +166,7 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
         const fx = (cx - rect.left) / rect.width;
         const fy = (cy - rect.top) / rect.height;
 
-        setVb({
+        applyVb({
           x: svgCx - fx * newW,
           y: svgCy - fy * newH,
           w: newW,
@@ -160,11 +175,27 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
       }
     };
 
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        // 2本指 → 1本指：残った指の位置と現在のズーム状態を基準に更新
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        // liveVbRef は setVb と同時に同期更新済みなので常に最新値を持つ
+        startVb = { ...liveVbRef.current };
+        isPanning = false;
+      } else if (e.touches.length === 0) {
+        startVb = null;
+        isPanning = false;
+      }
+    };
+
     el.addEventListener('touchstart', onTouchStart, { passive: true });
     el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
     return () => {
       el.removeEventListener('touchstart', onTouchStart);
       el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
     };
   }, [zoomable, minViewW, maxViewW]);
 
@@ -177,15 +208,17 @@ export default function RegionalMap({ region, statuses, solvedCodes, onTap, disa
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const rect = el.getBoundingClientRect();
-      const vb = vbRef.current;
+      const cur = liveVbRef.current;
       const factor = e.deltaY > 0 ? 1.15 : 0.87;
-      const newW = Math.max(minViewW, Math.min(maxViewW, vb.w * factor));
-      const newH = vb.h * newW / vb.w;
+      const newW = Math.max(minViewW, Math.min(maxViewW, cur.w * factor));
+      const newH = cur.h * newW / cur.w;
       const fx = (e.clientX - rect.left) / rect.width;
       const fy = (e.clientY - rect.top) / rect.height;
-      const svgCx = vb.x + fx * vb.w;
-      const svgCy = vb.y + fy * vb.h;
-      setVb({ x: svgCx - fx * newW, y: svgCy - fy * newH, w: newW, h: newH });
+      const svgCx = cur.x + fx * cur.w;
+      const svgCy = cur.y + fy * cur.h;
+      const next = { x: svgCx - fx * newW, y: svgCy - fy * newH, w: newW, h: newH };
+      liveVbRef.current = next;
+      setVb(next);
     };
 
     el.addEventListener('wheel', onWheel, { passive: false });

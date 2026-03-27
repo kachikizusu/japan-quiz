@@ -38,29 +38,26 @@ export function savePersonalBest(result: QuizResult): {
   const prev = loadPersonalBest(result.quizType, result.region);
   const isPerfect = result.correctCount === result.totalCount;
 
+  // 全問正解で前回より速いか、初めての全問正解
   const isNewPerfect =
     isPerfect &&
-    (prev?.perfectTimeMs === null ||
-      prev?.perfectTimeMs === undefined ||
-      result.totalTimeMs < (prev?.perfectTimeMs ?? Infinity));
+    (prev?.perfectTimeMs == null ||
+      result.totalTimeMs < prev.perfectTimeMs);
 
+  // 全問正解でなく、前回の最新スコアより良い
   const isNewScore =
     !isPerfect && result.correctCount > (prev?.bestScore ?? -1);
 
-  if (!isNewPerfect && !isNewScore && prev !== null) {
-    return { isNewPerfect: false, isNewScore: false, prev };
-  }
-
-  const isHigherScore = result.correctCount >= (prev?.bestScore ?? -1);
+  // 常に最新結果を保存する（早期リターンしない）
+  // bestScore = 最新プレイの正解数（常に上書き）
+  // perfectTimeMs = 全問正解の中で最速タイム（更新時のみ上書き）
   const next: PersonalBest = {
-    perfectTimeMs: isPerfect
-      ? isNewPerfect
-        ? result.totalTimeMs
-        : (prev?.perfectTimeMs ?? null)
+    perfectTimeMs: isNewPerfect
+      ? result.totalTimeMs
       : (prev?.perfectTimeMs ?? null),
-    bestScore: Math.max(result.correctCount, prev?.bestScore ?? 0),
+    bestScore: result.correctCount,
     totalCount: result.totalCount,
-    bestTimeMs: isHigherScore ? result.totalTimeMs : (prev?.bestTimeMs ?? result.totalTimeMs),
+    bestTimeMs: result.totalTimeMs,
     date: new Date().toISOString(),
   };
 
